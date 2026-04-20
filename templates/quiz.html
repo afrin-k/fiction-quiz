@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+{% block title %}{{ universe|title }} Quiz · Universe Quiz{% endblock %}
+
+{% block extra_head %}
+<style>
+    .quiz-page[data-universe='hogwarts'] {
+        --uni-accent:   #c0392b;
+        --uni-glow:     rgba(192,57,43,0.18);
+        --uni-tag-col:  #e07070;
+    }
+
+    .quiz-page[data-universe='chicago'] {
+        --uni-accent:   #d97706;
+        --uni-glow:     rgba(217,119,6,0.18);
+        --uni-tag-col:  #f59e0b;
+    }
+
+    .quiz-page[data-universe='olympus'] {
+        --uni-accent:   #2563eb;
+        --uni-glow:     rgba(37,99,235,0.18);
+        --uni-tag-col:  #93c5fd;
+    }
+
+    .quiz-page {
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 60px 24px 120px;
+    }
+
+    .quiz-header {
+        text-align: center;
+        margin-bottom: 60px;
+        animation: fade-up 0.7s ease forwards;
+    }
+
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(18px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .quiz-eyebrow {
+        font-family: 'Cinzel', serif;
+        font-size: 0.68rem;
+        letter-spacing: 0.24em;
+        text-transform: uppercase;
+        color: var(--uni-tag-col, var(--gold));
+        margin-bottom: 14px;
+    }
+
+    .quiz-title {
+        font-family: 'Cinzel Decorative', serif;
+        font-size: clamp(1.8rem, 4vw, 3rem);
+        color: var(--parchment);
+        line-height: 1.15;
+        margin-bottom: 14px;
+    }
+
+    .quiz-subtitle {
+        font-style: italic;
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        line-height: 1.7;
+    }
+
+    .quiz-header-line {
+        width: 60px;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, var(--gold), transparent);
+        margin: 20px auto 0;
+    }
+
+    .progress-wrap {
+        margin-bottom: 44px;
+        animation: fade-up 0.7s 0.2s ease both;
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        font-family: 'Cinzel', serif;
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+    }
+
+    .progress-track {
+        height: 3px;
+        background: var(--ink-raised);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+        transition: width 0.5s ease;
+        width: 0%;
+    }
+
+    .question-card {
+        background: var(--ink-surface);
+        border: 1px solid rgba(201,168,76,0.1);
+        border-radius: var(--radius);
+        padding: 32px 36px;
+        margin-bottom: 20px;
+        animation: fade-up 0.5s ease both;
+        position: relative;
+        overflow: hidden;
+        animation-delay: calc(var(--delay) * 0.08s);
+        background: var(--ink-surface);
+        animation: fade-up 0.5s ease both;
+    }
+
+    .question-card.answered {
+        border-color: rgba(201,168,76,0.25);
+        box-shadow: 0 0 20px var(--mist);
+    }
+
+    .question-text {
+        font-size: 1.18rem;
+        font-weight: 600;
+        color: var(--parchment);
+        margin-bottom: 22px;
+    }
+
+    .options-grid { display: grid; gap: 10px; }
+
+    .option-label {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 13px 18px;
+        border-radius: 7px;
+        border: 1px solid rgba(201,168,76,0.08);
+        background: var(--ink-raised);
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .option-label:hover {
+        border-color: var(--uni-accent);
+        background: var(--uni-glow);
+    }
+
+    .option-label input[type="radio"] { display: none; }
+
+    .option-bullet {
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        border: 1.5px solid var(--gold-dim);
+    }
+
+    .option-label:has(input:checked) {
+        border-color: var(--uni-accent);
+        background: var(--uni-glow);
+    }
+
+    .btn-submit {
+        font-family: 'Cinzel', serif;
+        background: var(--uni-accent, var(--gold));
+        color: white;
+        padding: 17px 52px;
+        border: none;
+        cursor: pointer;
+        border-radius: 3px;
+        transition: 0.3s;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        filter: brightness(1.2);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="quiz-page" data-universe="{{ universe }}">
+
+    <div class="quiz-header">
+        {% if universe == 'hogwarts' %}
+            <p class="quiz-eyebrow">🧙 The Wizarding World</p>
+            <h1 class="quiz-title">The Sorting Ceremony</h1>
+            <p class="quiz-subtitle">The Hat sees all — even the parts you hide.</p>
+        {% elif universe == 'chicago' %}
+            <p class="quiz-eyebrow">🔥 The Faction System</p>
+            <h1 class="quiz-title">The Aptitude Test</h1>
+            <p class="quiz-subtitle">In Chicago, your faction is your family.</p>
+        {% else %}
+            <p class="quiz-eyebrow">⚡ Camp Half-Blood</p>
+            <h1 class="quiz-title">The Oracle's Revelation</h1>
+            <p class="quiz-subtitle">Reveal your divine heritage.</p>
+        {% endif %}
+        <div class="quiz-header-line"></div>
+    </div>
+
+    <div class="progress-wrap">
+        <div class="progress-label">
+            <span>Progress</span>
+            <span id="progressText">0 / {{ questions|length }}</span>
+        </div>
+        <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+    </div>
+
+    <form method="POST" action="/result/{{ universe }}" id="quizForm">
+        {% for q_id, q_data in questions.items() %}
+        <div class="question-card" id="card-{{ q_id }}" style="--delay: {{ loop.index0 }};">
+            <p class="question-text">{{ q_data.text }}</p>
+            <div class="options-grid">
+                {% for opt_key, opt_data in q_data.options.items() %}
+                <label class="option-label">
+                    <input type="radio" name="{{ q_id }}" value="{{ opt_key }}" onchange="onAnswer('{{ q_id }}')">
+                    <span class="option-bullet"></span>
+                    <span class="option-text">{{ opt_data.label }}</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="submit-area" style="text-align: center; margin-top: 40px;">
+            <button type="submit" class="btn-submit">
+                <span>Reveal My Destiny ✦</span>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const total = Number("{{ questions|length }}");
+    let answered = new Set();
+
+    function onAnswer(qId) {
+        answered.add(qId);
+        document.getElementById('card-' + qId).classList.add('answered');
+        const pct = (answered.size / total) * 100;
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('progressText').textContent = answered.size + ' / ' + total;
+    }
+</script>
+{% endblock %}

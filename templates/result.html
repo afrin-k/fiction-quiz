@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% block title %}/{{ universe|title }} Result · Universe Quiz{% endblock %}
+
+{% block extra_head %}
+<style>
+    .result-page[data-universe='hogwarts'] {
+        --uni-accent: #c0392b;
+        --uni-glow:   rgba(192,57,43,0.22);
+        --uni-tag:    #e07070;
+    }
+    .result-page[data-universe='chicago'] {
+        --uni-accent: #d97706;
+        --uni-glow:   rgba(217,119,6,0.22);
+        --uni-tag:    #f59e0b;
+    }
+    .result-page[data-universe='olympus'] {
+        --uni-accent: #2563eb;
+        --uni-glow:   rgba(37,99,235,0.22);
+        --uni-tag:    #93c5fd;
+    }
+
+    .result-page {
+        min-height: calc(100vh - 80px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 80px 24px 120px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .result-glow {
+        position: absolute;
+        width: 700px;
+        height: 700px;
+        border-radius: 50%;
+        background: radial-gradient(circle, var(--uni-glow) 0%, transparent 65%);
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        animation: glow-pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes glow-pulse {
+        0%, 100% { opacity: 0.8; transform: translate(-50%,-50%) scale(1);   }
+        50%       { opacity: 1;   transform: translate(-50%,-50%) scale(1.12); }
+    }
+
+    .sparks {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    .spark {
+        position: absolute;
+        width: 3px; height: 3px;
+        border-radius: 50%;
+        background: var(--gold);
+        animation: spark-rise linear infinite;
+        opacity: 0;
+    }
+
+    @keyframes spark-rise {
+        0%   { opacity: 0;   transform: translateY(0)    scale(0); }
+        10%  { opacity: 1;   transform: translateY(-20px) scale(1); }
+        90%  { opacity: 0.4; transform: translateY(-180px) scale(0.5); }
+        100% { opacity: 0;   transform: translateY(-220px) scale(0); }
+    }
+
+    /* ── Content ── */
+    .result-inner {
+        position: relative;
+        z-index: 2;
+        width: 100%;
+        max-width: 900px;
+        padding: 0 10px;
+    }
+
+    .result-eyebrow {
+        font-family: 'Cinzel', serif;
+        font-size: 0.68rem;
+        letter-spacing: 0.26em;
+        text-transform: uppercase;
+        color: var(--uni-tag, var(--gold));
+        margin-bottom: 20px;
+        opacity: 0;
+        animation: fade-up 0.7s 0.1s forwards;
+    }
+
+    @keyframes fade-up {
+        from { opacity: 0; transform: translateY(16px); }
+        to   { opacity: 1; transform: translateY(0);    }
+    }
+
+    .result-verdict {
+        font-family: 'Cinzel', serif;
+        font-size: 1rem;
+        letter-spacing: 0.1em;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 10px;
+        opacity: 0;
+        animation: fade-up 0.7s 0.3s forwards;
+    }
+
+    .result-name {
+        font-family: 'Cinzel Decorative', serif;
+        font-size: clamp(2.5rem, 8vw, 5.5rem);
+        font-weight: 900;
+        line-height: 1.2;
+        background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, #fff8e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 28px;
+        width: 100%;
+        word-wrap: break-word;
+        opacity: 0;
+        animation: fade-up 0.9s 0.5s forwards, shimmer 3s 1.5s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+        0%, 100% { filter: brightness(1);    }
+        50%      { filter: brightness(1.15); }
+    }
+
+    .result-desc-box {
+        background: var(--ink-surface);
+        border: 1px solid rgba(201,168,76,0.15);
+        border-radius: var(--radius);
+        padding: 32px 40px;
+        margin-bottom: 44px;
+        opacity: 0;
+        animation: fade-up 0.7s 0.9s forwards;
+        position: relative;
+    }
+
+    .result-desc {
+        font-style: italic;
+        font-size: 1.12rem;
+        line-height: 1.85;
+        color: var(--text-muted);
+    }
+
+    .result-actions {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+        opacity: 0;
+        animation: fade-up 0.7s 1.2s forwards;
+    }
+
+    .btn-retake {
+        font-family: 'Cinzel', serif;
+        font-size: 0.75rem;
+        background: linear-gradient(135deg, var(--gold-light), var(--gold));
+        color: var(--ink);
+        padding: 14px 32px;
+        text-decoration: none;
+        border-radius: 3px;
+        transition: 0.3s;
+    }
+
+    .btn-home {
+        font-family: 'Cinzel', serif;
+        font-size: 0.75rem;
+        color: var(--gold);
+        border: 1px solid var(--gold-dim);
+        padding: 14px 32px;
+        text-decoration: none;
+        border-radius: 3px;
+        transition: 0.3s;
+    }
+
+    .result-crest {
+        font-size: 5rem;
+        margin-bottom: 10px;
+        opacity: 0;
+        animation: fade-up 0.6s 0.7s forwards, crest-pop 0.6s 0.7s cubic-bezier(0.175,0.885,0.32,1.275) forwards;
+    }
+
+    @keyframes crest-pop {
+        from { transform: scale(0.4) rotate(-10deg); }
+        to   { transform: scale(1)   rotate(0deg);   }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="result-page" data-universe="{{ universe }}">
+
+    <div class="result-glow"></div>
+    <div class="sparks" id="sparks"></div>
+
+    <div class="result-inner">
+        <p class="result-eyebrow">
+            {% if universe == 'hogwarts' %}🧙 The Sorting Hat Has Spoken
+            {% elif universe == 'chicago' %}🔥 Your Aptitude Has Been Revealed
+            {% else %}⚡ The Oracle Has Foreseen It
+            {% endif %}
+        </p>
+
+        <div class="result-crest">
+            {% set icons = {
+                'gryffindor': '🦁', 'slytherin': '🐍', 'ravenclaw': '🦅', 'hufflepuff': '🦡',
+                'abnegation': '🤍', 'dauntless': '🖤', 'erudite': '📘', 'amity': '🌿', 'candor': '⚖️',
+                'zeus': '⚡', 'poseidon': '🌊', 'hades': '💀', 'ares': '⚔️', 'aphrodite': '🌹',
+                'apollo': '☀️', 'hephaestus': '🔥', 'athena': '🦉', 'hermes': '🪽', 'demeter': '🌾', 'dionysus': '🍇'
+            } %}
+            {{ icons.get(result, '✨') }}
+        </div>
+
+        <p class="result-verdict">You belong to</p>
+        <h1 class="result-name">{{ result|upper }}</h1>
+
+        <div class="result-desc-box">
+            <p class="result-desc">
+                {% if result == 'gryffindor' %}
+                    Brave, daring, and chivalrous — your nerve and courage set you apart.
+                {% elif result == 'slytherin' %}
+                    Cunning, resourceful, and fiercely ambitious — you seize greatness.
+                {% elif result == 'ravenclaw' %}
+                    Wit beyond measure is your greatest treasure. You live for ideas.
+                {% elif result == 'hufflepuff' %}
+                    Loyal, patient, and unwaveringly kind — you are the heart of the fellowship.
+                {% elif result == 'dauntless' %}
+                    Fear has no hold on you. You are bold, daring, and alive when stakes are high.
+                {% else %}
+                    The stars have aligned. Your destiny in the {{ universe|title }} universe has been revealed.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="result-actions">
+            <a href="/quiz/{{ universe }}" class="btn-retake">↺ Retake Quiz</a>
+            <a href="/" class="btn-home">← Back to Home</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const container = document.getElementById('sparks');
+    if (container) {
+        for (let i = 0; i < 28; i++) {
+            const s = document.createElement('div');
+            s.className = 'spark';
+            s.style.left = Math.random() * 100 + '%';
+            s.style.bottom = Math.random() * 20 + '%';
+            s.style.animationDuration = (2.5 + Math.random() * 3) + 's';
+            s.style.animationDelay = (Math.random() * 4) + 's';
+            container.appendChild(s);
+        }
+    }
+</script>
+{% endblock %}
